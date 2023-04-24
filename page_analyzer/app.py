@@ -2,7 +2,7 @@ import os
 import psycopg2
 import psycopg2.extras
 from flask import Flask, request, url_for, flash, redirect, render_template
-from validator import validate
+from page_analyzer.validator import validate
 from dotenv import load_dotenv
 from urllib.parse import urlparse
 
@@ -51,7 +51,7 @@ def post_urls():
             date = datatime.date.today()
             cur.execute("""
                 INSERT INTO urls (name, created_at)
-                VALUES (%s, %s) RETURNINIG id""", [valid_url, date]
+                VALUES (%s, %s) RETURNINIG id""", [valid_url, date])
             result = cur.fetchone()[0]
             conn.commit()
         flash('Страница успешно добавлена', 'alert alert-success')
