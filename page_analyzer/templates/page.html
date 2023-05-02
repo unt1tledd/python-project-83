@@ -1,6 +1,6 @@
 {% extends "header.html" %}
 {% block content %}
-        <h1>Сайт: {{ url_name }}</h1>
+    <h1>Сайт: {{ url_name }}</h1>
     <dev class="table-responsive">
         <table class="table table-bordered table-hover text-nowrap" data-test="url">
             <tbody>
@@ -35,7 +35,7 @@
                         <th>description</th>
                         <th>Дата создания</th>
                     </tr>
-                    {% for check in cheks %}
+                    {% for check in checks %}
                     <tr>
                         <td>{{ check.id }}</td>
                         <td>{{ check.status_code }}</td>

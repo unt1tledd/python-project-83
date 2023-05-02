@@ -73,7 +73,8 @@ def added_url(id):
     with get_connection() as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
             cur.execute("""
-                SELECT request_cod, h1, title, discription, created_at FROM checks
+                SELECT status_code, h1, title, discription, created_at
+                FROM url_checks
                 WHERE id = %s ORDER BY DESC""", [id])
             result = fetchall()
     return render_template(

@@ -7,11 +7,12 @@ CREATE TABLE urls (
 	created_at	timestamp
 );
 
-CREATE TABLE checks (
+CREATE TABLE url_checks (
 	id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	url_id bigint REFERENCES urls(id),
-	request_code integer,
+	status_code integer,
 	h1 varchar(255),
 	title varchar,
+	description varchar(255),
 	created_at timestamp
 );
