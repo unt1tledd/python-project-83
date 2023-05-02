@@ -24,7 +24,7 @@ def get_connection():
 
 @app.route('/')
 def index():
-    return render_template('templates/index.html')
+    return render_template('index.html')
 
 
 @app.post('/urls')
@@ -123,7 +123,7 @@ def id_check(id):
         with conn.cursor() as cur:
             date = datetime.date.today()
             cur.execute("""
-                INSERT INTO checks (url_id, created_at, status_code, h1, title, description)
+                INSERT INTO url_checks (url_id, created_at, status_code, h1, title, description)
                 VALUES (%s, %s, %s, %s, %s, %s)""", [
                 id, date, status_code, h1, title, meta])
             conn.commit()
