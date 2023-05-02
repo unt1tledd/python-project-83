@@ -24,7 +24,7 @@ def get_connection():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('templates/index.html')
 
 
 @app.post('/urls')
@@ -128,4 +128,4 @@ def id_check(id):
                 id, date, status_code, h1, title, meta])
             conn.commit()
     flash("Страница успешно проверена", "alert alert-success")
-    return redirect(url_for('url_added', id=id)
+    return redirect(url_for('url_added', id=id))

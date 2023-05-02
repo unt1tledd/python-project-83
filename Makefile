@@ -1,5 +1,5 @@
 dev:
-	poetry run flask --app page_analyzer:app --debug run
+	poetry run flask --app page_analyzer:app run
 
 all: start db-reset schema-load
 
