@@ -1,8 +1,8 @@
-from bs4 import BeautifulSoup4
+import bs4
 
 
 def get_content(content):
-    soup = BeautifulSoup(content, 'lxml')
+    soup = bs4.BeautifulSoup(content, 'html.parser')
     h1 = soup.find('h1').get_text() if soup.find('h1') else ''
     title = soup.find('title').get_text() if soup.find('title') else ''
     meta = soup.find(

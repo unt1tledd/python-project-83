@@ -8,6 +8,7 @@ from page_analyzer.validator import validate
 from requests import ConnectionError, HTTPError
 from dotenv import load_dotenv
 from urllib.parse import urlparse
+from page_analyzer.content_of_page import get_content
 
 
 app = Flask(__name__)
@@ -46,19 +47,19 @@ def post_url():
                 WHERE name = %s""", [valid_url])
             result = cur.fetchone()
             if result:
-                flash('Страница ужу существует', 'alert alert-info')
+                flash('Страница уже существует', 'alert alert-info')
                 return redirect(url_for('added_url', id=result.id))
     
     with get_connection() as conn:
         with conn.cursor() as cur:
-            date = datatime.date.today()
+            date = datetime.date.today()
             cur.execute("""
                 INSERT INTO urls (name, created_at)
-                VALUES (%s, %s) RETURNINIG id""", [valid_url, date])
-            result = cur.fetchone()[0]
+                VALUES (%s, %s) RETURNING id""", [valid_url, date])
+            url_id = cur.fetchone()[0]
             conn.commit()
         flash('Страница успешно добавлена', 'alert alert-success')
-        return redirect(url_for('added_url', id=result))
+        return redirect(url_for('added_url', id=url_id))
 
 
 @app.route('/urls/<id>')
@@ -73,10 +74,10 @@ def added_url(id):
     with get_connection() as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
             cur.execute("""
-                SELECT status_code, h1, title, discription, created_at
+                SELECT status_code, h1, title, description, created_at
                 FROM url_checks
-                WHERE id = %s ORDER BY DESC""", [id])
-            result = fetchall()
+                WHERE id = %s ORDER BY id DESC""", [id])
+            result = cur.fetchall()
     return render_template(
             'page.html',
             url_name=url_name,
@@ -129,4 +130,4 @@ def id_check(id):
                 id, date, status_code, h1, title, meta])
             conn.commit()
     flash("Страница успешно проверена", "alert alert-success")
-    return redirect(url_for('url_added', id=id))
+    return redirect(url_for('added_url', id=id))
