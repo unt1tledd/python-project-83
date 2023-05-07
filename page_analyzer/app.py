@@ -2,7 +2,7 @@ import os
 import psycopg2
 import psycopg2.extras
 import datetime
-import jinja2
+import requests
 from flask import Flask, request, url_for, flash, redirect, render_template
 from page_analyzer.validator import validate
 from requests import ConnectionError, HTTPError
@@ -119,7 +119,7 @@ def id_check(id):
         return redirect(url_for('url_added', id=id))
 
     status_code = response.status_code
-    h1, title, meta = get_content_of_page(response.text)
+    h1, title, meta = get_content(response.text)
     with get_connection() as conn:
         with conn.cursor() as cur:
             date = datetime.date.today()
