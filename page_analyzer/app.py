@@ -82,10 +82,10 @@ def get_urls():
     with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
         cur.execute("""
             SELECT
-            DISTINCT ON (urls.id) urls.id, urls.name, MAX(checks.created_at),checks.status_code
+            DISTINCT ON (urls.id) urls.id, urls.name, MAX(url_checks.created_at),url_checks.status_code
             FROM urls
-            LEFT JOIN checks ON urls.id = checks.url_id
-            GROUP BY urls.id, checks.status_code
+            LEFT JOIN url_checks ON urls.id = url_checks.url_id
+            GROUP BY urls.id, url_checks.status_code
             ORDER BY urls.id DESC""")
         checks = cur.fetchall()
     return render_template('pages.html', checks=checks)
