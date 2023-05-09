@@ -1,7 +1,7 @@
 {% extends "header.html" %}
 {% block content %}
     <h1>Сайт: {{ url_name }}</h1>
-    <dev class="table-responsive">
+    <div class="table-responsive">
         <table class="table table-bordered table-hover text-nowrap" data-test="url">
             <tbody>
                 <tr>
@@ -18,13 +18,13 @@
                 </tr>
             </tbody>
         </table>
-    </dev>
-    <dev>
+    </div>
+    <div>
         <h2 class="mt-5 mb-3">Проверки</h2>
         <form action="{{ url_for('id_check', id=url_id) }}" method='POST'>
-            <input type='submit' value='Запустить проверку'>
+            <input type='submit' class="btn btn-primary" value='Запустить проверку'>
         </form>
-        <dev class="table-responsive">
+        <div class="table-responsive">
             <table class="table table-bordered table-hover mt-2" data-test="checks">
                 <tbody>
                     <tr>
@@ -47,6 +47,6 @@
                     {% endfor %}
                 </tbody>
             </table>
-        </dev>
-    </dev>
+        </div>
+    </div>
 {% endblock %}

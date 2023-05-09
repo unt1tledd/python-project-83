@@ -12,8 +12,6 @@ from page_analyzer.content_of_page import get_content
 
 
 app = Flask(__name__)
-
-
 load_dotenv()
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 DATABASE_URL = os.getenv('DATABASE_URL')
