@@ -6,15 +6,9 @@ all: start db-reset schema-load
 schema-load:
 	psql python-project-83 < database.sql
 
-db-create:
-	`createdb python-project-83`
-
 db-reset:
 	dropdb python-project-83 || true
 	createdb python-project-83
-
-connect:
-	psql -d python-project-83
 
 PORT ?= 8000
 start:
