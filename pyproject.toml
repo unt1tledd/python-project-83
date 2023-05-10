@@ -5,6 +5,10 @@ description = "Web application that executes queries over the network and stores
 authors = ["Софья Григорович <sonyashkin@icloud.com>"]
 readme = "README.md"
 packages = [{include = "page_analyzer"}]
+classifiers = [
+"Programming Language :: Python :: 3.10",
+"Framework :: Flask",
+"Environment :: Web Environment"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
