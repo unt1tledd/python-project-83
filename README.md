@@ -4,7 +4,7 @@
 # Page Analyzer <a href=https://python-project-83-production-56f9.up.railway.app>Live Demo</a>
 
 ## Description
-### Web application that executes queries over the network and saves data to a database
+Web application that executes queries over the network and saves data to a database
 
 ## Install
 ```
