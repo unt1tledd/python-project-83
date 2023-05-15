@@ -30,7 +30,7 @@ def index():
 def post_url():
     url = request.form.get('url')
     errors = validate(url)
-    
+
     if errors:
         for error in errors:
             flash(error, "alert alert-danger")
@@ -67,7 +67,7 @@ def added_url(id):
                 SELECT name, created_at FROM urls
                 WHERE id = %s""", [id])
             url_name, url_created_at = cur.fetchone()
-    
+
     with get_conn() as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
             cur.execute("""
@@ -75,12 +75,11 @@ def added_url(id):
                 FROM url_checks
                 WHERE url_id = %s ORDER BY id DESC""", [id])
             checks = cur.fetchall()
-    return render_template(
-            'page.html',
-            url_name=url_name,
-            url_id=id,
-            url_created_at=url_created_at.date(),
-            checks=checks)
+    return render_template('page.html',
+                            url_name=url_name,
+                            url_id=id,
+                            url_created_at=url_created_at.date(),
+                            checks=checks)
 
 
 @app.get('/urls')
@@ -114,9 +113,8 @@ def id_check(id):
         response = requests.get(url_name)
         response.raise_for_status()
     except (ConnectionError, HTTPError):
-        conn.close()
         flash("Произошла ошибка при проверке", "alert alert-danger")
-        return redirect(url_for('url_added', id=id))
+        return redirect(url_for('added_url', id=id))
 
     status_code = response.status_code
     h1, title, meta = get_content(response.text)
