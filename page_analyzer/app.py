@@ -21,9 +21,6 @@ def get_conn():
     return psycopg2.connect(DATABASE_URL)
 
 
-conn = get_conn()
-
-
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -41,40 +38,43 @@ def post_url():
 
     parse_url = urlparse(url)
     valid_url = parse_url.scheme + '://' + parse_url.netloc
-    with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
-        cur.execute("""
-            SELECT id FROM urls
-            WHERE name = %s""", [valid_url])
-        result = cur.fetchone()
-        if result:
-            flash('Страница уже существует', 'alert alert-info')
-            return redirect(url_for('added_url', id=result.id))
-
-    with conn.cursor() as cur:
-        date = datetime.date.today()
-        cur.execute("""
-            INSERT INTO urls (name, created_at)
-            VALUES (%s, %s) RETURNING id""", [valid_url, date])
-        url_id = cur.fetchone()[0]
-        conn.commit()
-    flash('Страница успешно добавлена', 'alert alert-success')
-    return redirect(url_for('added_url', id=url_id))
+    with get_conn() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
+            cur.execute("""
+                SELECT id FROM urls
+                WHERE name = %s""", [valid_url])
+            result = cur.fetchone()
+            if result:
+                flash('Страница уже существует', 'alert alert-info')
+                return redirect(url_for('added_url', id=result.id))
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            date = datetime.date.today()
+            cur.execute("""
+                INSERT INTO urls (name, created_at)
+                VALUES (%s, %s) RETURNING id""", [valid_url, date])
+            url_id = cur.fetchone()[0]
+            conn.commit()
+        flash('Страница успешно добавлена', 'alert alert-success')
+        return redirect(url_for('added_url', id=url_id))
 
 
 @app.route('/urls/<id>')
 def added_url(id):
-    with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
-        cur.execute("""
-            SELECT name, created_at FROM urls
-            WHERE id = %s""", [id])
-        url_name, url_created_at = cur.fetchone()
-
-    with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
-        cur.execute("""
-            SELECT id, status_code, h1, title, description, created_at
-            FROM url_checks
-            WHERE url_id = %s ORDER BY id DESC""", [id])
-        checks = cur.fetchall()
+    with get_conn() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
+            cur.execute("""
+                SELECT name, created_at FROM urls
+                WHERE id = %s""", [id])
+            url_name, url_created_at = cur.fetchone()
+    
+    with get_conn() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
+            cur.execute("""
+                SELECT id, status_code, h1, title, description, created_at
+                FROM url_checks
+                WHERE url_id = %s ORDER BY id DESC""", [id])
+            checks = cur.fetchall()
     return render_template(
             'page.html',
             url_name=url_name,
@@ -85,25 +85,29 @@ def added_url(id):
 
 @app.get('/urls')
 def get_urls():
-    with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
-        cur.execute("""SELECT urls.id, urls.name, url_checks.created_at,
-        url_checks.status_code FROM urls
-        LEFT JOIN url_checks ON urls.id = url_checks.url_id
-        WHERE url_checks.url_id IS NULL OR
-        url_checks.id = (SELECT MAX(url_checks.id) FROM url_checks
-        WHERE url_checks.url_id = urls.id) ORDER BY urls.id DESC""")
-        urls = cur.fetchall()
+    with get_conn() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
+            cur.execute("""
+                SELECT urls.id, urls.name, url_checks.created_at,
+                url_checks.status_code FROM urls
+                LEFT JOIN url_checks ON urls.id = url_checks.url_id
+                WHERE url_checks.url_id IS NULL OR
+                url_checks.id = (SELECT MAX(url_checks.id) FROM url_checks
+                WHERE url_checks.url_id = urls.id)
+                ORDER BY urls.id DESC""")
+            urls = cur.fetchall()
     return render_template('pages.html', checks=urls)
 
 
 @app.route('/urls/<id>/checks', methods=['POST'])
 def id_check(id):
-    with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
-        cur.execute("""
-            SELECT name
-            FROM urls
-            WHERE id = %s""", [id])
-        result = cur.fetchone()
+    with get_conn() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
+            cur.execute("""
+                SELECT name
+                FROM urls
+                WHERE id = %s""", [id])
+            result = cur.fetchone()
 
     url_name = result.name
     try:
@@ -116,12 +120,13 @@ def id_check(id):
 
     status_code = response.status_code
     h1, title, meta = get_content(response.text)
-    with conn.cursor() as cur:
-        date = datetime.date.today()
-        cur.execute("""
-            INSERT INTO url_checks (url_id, created_at, status_code, h1, title, description)
-            VALUES (%s, %s, %s, %s, %s, %s)""", [
-            id, date, status_code, h1, title, meta])
-        conn.commit()
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            date = datetime.date.today()
+            cur.execute("""
+                INSERT INTO url_checks (url_id, created_at, status_code, h1, title, description)
+                VALUES (%s, %s, %s, %s, %s, %s)""", [
+                id, date, status_code, h1, title, meta])
+            conn.commit()
     flash("Страница успешно проверена", "alert alert-success")
     return redirect(url_for('added_url', id=id))
