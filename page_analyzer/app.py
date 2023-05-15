@@ -15,7 +15,13 @@ app = Flask(__name__)
 load_dotenv()
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 DATABASE_URL = os.getenv('DATABASE_URL')
-conn = psycopg2.connect(DATABASE_URL)
+
+
+def get_conn():
+    return psycopg2.connect(DATABASE_URL)
+
+
+conn = get_conn()
 
 
 @app.route('/')
@@ -80,13 +86,12 @@ def added_url(id):
 @app.get('/urls')
 def get_urls():
     with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
-        cur.execute("""
-            SELECT
-            DISTINCT ON (urls.id) urls.id, urls.name, MAX(url_checks.created_at), url_checks.status_code
-            FROM urls
-            JOIN url_checks ON urls.id = url_id
-            GROUP BY urls.id, url_checks.status_code
-            ORDER BY urls.id DESC""")
+        cur.execute("""SELECT urls.id, urls.name, url_checks.created_at,
+        url_checks.status_code FROM urls
+        LEFT JOIN url_checks ON urls.id = url_checks.url_id
+        WHERE url_checks.url_id IS NULL OR
+        url_checks.id = (SELECT MAX(url_checks.id) FROM url_checks
+        WHERE url_checks.url_id = urls.id) ORDER BY urls.id DESC""")
         urls = cur.fetchall()
     return render_template('pages.html', checks=urls)
 
@@ -105,6 +110,7 @@ def id_check(id):
         response = requests.get(url_name)
         response.raise_for_status()
     except (ConnectionError, HTTPError):
+        conn.close()
         flash("Произошла ошибка при проверке", "alert alert-danger")
         return redirect(url_for('url_added', id=id))
 
