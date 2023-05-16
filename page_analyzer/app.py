@@ -76,10 +76,10 @@ def added_url(id):
                 WHERE url_id = %s ORDER BY id DESC""", [id])
             checks = cur.fetchall()
     return render_template('page.html',
-                            url_name=url_name,
-                            url_id=id,
-                            url_created_at=url_created_at.date(),
-                            checks=checks)
+                           url_name=url_name,
+                           url_id=id,
+                           url_created_at=url_created_at.date(),
+                           checks=checks)
 
 
 @app.get('/urls')
