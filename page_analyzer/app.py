@@ -62,7 +62,7 @@ def post_url():
 @app.route('/urls/<id>')
 def added_url(id):
     with get_conn() as conn:
-        with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
+        with conn.cursor() as cur:
             cur.execute("""
                 SELECT name, created_at FROM urls
                 WHERE id = %s""", [id])
