@@ -76,10 +76,10 @@ def added_url(id):
                 WHERE url_id = %s ORDER BY id DESC""", [id])
             checks = cur.fetchall()
     return render_template('page.html',
-                            url_name=url_name,
-                            url_id=id,
-                            url_created_at=url_created_at.date(),
-                            checks=checks)
+                           url_name=url_name,
+                           url_id=id,
+                           url_created_at=url_created_at.date(),
+                           checks=checks)
 
 
 @app.get('/urls')
@@ -122,7 +122,8 @@ def id_check(id):
         with conn.cursor() as cur:
             date = datetime.date.today()
             cur.execute("""
-                INSERT INTO url_checks (url_id, created_at, status_code, h1, title, description)
+                INSERT INTO url_checks
+                (url_id, created_at, status_code, h1, title, description)
                 VALUES (%s, %s, %s, %s, %s, %s)""", [
                 id, date, status_code, h1, title, meta])
             conn.commit()
