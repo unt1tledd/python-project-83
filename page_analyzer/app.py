@@ -33,7 +33,7 @@ def post_url():
 
     if errors:
         for error in errors:
-            flash(error, "alert alert-danger")
+            flash(error, "danger")
         return render_template('index.html', url=url), 422
 
     parse_url = urlparse(url)
@@ -45,30 +45,26 @@ def post_url():
                 WHERE name = %s""", [valid_url])
             result = cur.fetchone()
             if result:
-                flash('Страница уже существует', 'alert alert-info')
-                return redirect(url_for('added_url', id=result.id))
-    with get_conn() as conn:
-        with conn.cursor() as cur:
+                flash('Страница уже существует', 'info')
+                return redirect(url_for('add_url', id=result.id))
             date = datetime.date.today()
             cur.execute("""
                 INSERT INTO urls (name, created_at)
                 VALUES (%s, %s) RETURNING id""", [valid_url, date])
-            url_id = cur.fetchone()[0]
+            url_id = cur.fetchone().id
             conn.commit()
-        flash('Страница успешно добавлена', 'alert alert-success')
-        return redirect(url_for('added_url', id=url_id))
+        flash('Страница успешно добавлена', 'success')
+        return redirect(url_for('add_url', id=url_id))
 
 
 @app.route('/urls/<id>')
-def added_url(id):
+def add_url(id):
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute("""
                 SELECT name, created_at FROM urls
                 WHERE id = %s""", [id])
             url_name, url_created_at = cur.fetchone()
-
-    with get_conn() as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
             cur.execute("""
                 SELECT id, status_code, h1, title, description, created_at
@@ -99,7 +95,7 @@ def get_urls():
 
 
 @app.route('/urls/<id>/checks', methods=['POST'])
-def id_check(id):
+def check_id(id):
     with get_conn() as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
             cur.execute("""
@@ -113,8 +109,8 @@ def id_check(id):
         response = requests.get(url_name)
         response.raise_for_status()
     except (ConnectionError, HTTPError):
-        flash("Произошла ошибка при проверке", "alert alert-danger")
-        return redirect(url_for('added_url', id=id))
+        flash("Произошла ошибка при проверке", "danger")
+        return redirect(url_for('add_url', id=id))
 
     status_code = response.status_code
     h1, title, meta = get_content(response.text)
@@ -127,5 +123,5 @@ def id_check(id):
                 VALUES (%s, %s, %s, %s, %s, %s)""", [
                 id, date, status_code, h1, title, meta])
             conn.commit()
-    flash("Страница успешно проверена", "alert alert-success")
-    return redirect(url_for('added_url', id=id))
+    flash("Страница успешно проверена", "success")
+    return redirect(url_for('add_url', id=id))

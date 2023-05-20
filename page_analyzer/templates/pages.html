@@ -13,7 +13,7 @@
                 {% for url in checks %}
                 <tr>
                     <td>{{ url.id }}</td>
-                    <td><a href='{{ url_for('added_url', id=url.id) }}'>{{ url.name }}</a></td>
+                    <td><a href='{{ url_for('add_url', id=url.id) }}'>{{ url.name }}</a></td>
                     <td>{{ url.created_at }}</td>
                     <td>{{ url.status_code }}</td>
                 </tr>
