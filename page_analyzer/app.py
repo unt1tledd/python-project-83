@@ -1,8 +1,7 @@
 import os
 import psycopg2
-import psycopg2.extras
-import datetime
 import requests
+from page_analyzer import db_actions
 from flask import Flask, request, url_for, flash, redirect, render_template
 from page_analyzer.validator import validate
 from requests import ConnectionError, HTTPError
@@ -38,39 +37,18 @@ def post_url():
 
     parse_url = urlparse(url)
     valid_url = parse_url.scheme + '://' + parse_url.netloc
-    with get_conn() as conn:
-        with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
-            cur.execute("""
-                SELECT id FROM urls
-                WHERE name = %s""", [valid_url])
-            result = cur.fetchone()
-            if result:
-                flash('Страница уже существует', 'info')
-                return redirect(url_for('add_url', id=result.id))
-            date = datetime.date.today()
-            cur.execute("""
-                INSERT INTO urls (name, created_at)
-                VALUES (%s, %s) RETURNING id""", [valid_url, date])
-            url_id = cur.fetchone().id
-            conn.commit()
-        flash('Страница успешно добавлена', 'success')
-        return redirect(url_for('add_url', id=url_id))
+    result = db_actions.select_id_urls(get_conn, valid_url)
+    if result:
+        flash('Страница уже существует', 'info')
+        return redirect(url_for('add_url', id=result.id))
+    url_id = db_actions.insert_into_urls(get_conn, valid_url)
+    flash('Страница успешно добавлена', 'success')
+    return redirect(url_for('add_url', id=url_id))
 
 
 @app.route('/urls/<id>')
 def add_url(id):
-    with get_conn() as conn:
-        with conn.cursor() as cur:
-            cur.execute("""
-                SELECT name, created_at FROM urls
-                WHERE id = %s""", [id])
-            url_name, url_created_at = cur.fetchone()
-        with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
-            cur.execute("""
-                SELECT id, status_code, h1, title, description, created_at
-                FROM url_checks
-                WHERE url_id = %s ORDER BY id DESC""", [id])
-            checks = cur.fetchall()
+    url_name, url_created_at, checks = db_actions.check_url(get_conn, id)
     return render_template('page.html',
                            url_name=url_name,
                            url_id=id,
@@ -80,31 +58,13 @@ def add_url(id):
 
 @app.get('/urls')
 def get_urls():
-    with get_conn() as conn:
-        with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
-            cur.execute("""
-                SELECT urls.id, urls.name, url_checks.created_at,
-                url_checks.status_code FROM urls
-                LEFT JOIN url_checks ON urls.id = url_checks.url_id
-                WHERE url_checks.url_id IS NULL OR
-                url_checks.id = (SELECT MAX(url_checks.id) FROM url_checks
-                WHERE url_checks.url_id = urls.id)
-                ORDER BY urls.id DESC""")
-            urls = cur.fetchall()
+    urls = db_actions.make_list_of_urls(get_conn)
     return render_template('pages.html', checks=urls)
 
 
 @app.route('/urls/<id>/checks', methods=['POST'])
 def check_id(id):
-    with get_conn() as conn:
-        with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
-            cur.execute("""
-                SELECT name
-                FROM urls
-                WHERE id = %s""", [id])
-            result = cur.fetchone()
-
-    url_name = result.name
+    url_name = db_actions.get_name_url(get_conn, id)
     try:
         response = requests.get(url_name)
         response.raise_for_status()
@@ -114,14 +74,6 @@ def check_id(id):
 
     status_code = response.status_code
     h1, title, meta = get_content(response.text)
-    with get_conn() as conn:
-        with conn.cursor() as cur:
-            date = datetime.date.today()
-            cur.execute("""
-                INSERT INTO url_checks
-                (url_id, created_at, status_code, h1, title, description)
-                VALUES (%s, %s, %s, %s, %s, %s)""", [
-                id, date, status_code, h1, title, meta])
-            conn.commit()
+    db_actions.insert_into_urls_checks(get_conn, id, status_code, h1, title, meta)
     flash("Страница успешно проверена", "success")
     return redirect(url_for('add_url', id=id))

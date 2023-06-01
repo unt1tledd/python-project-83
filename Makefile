@@ -1,7 +1,7 @@
 dev:
 	poetry run flask --app page_analyzer:app --debug run
 
-all: start db-reset schema-load
+all: db-reset schema-load
 
 schema-load:
 	psql python-project-83 < database.sql
