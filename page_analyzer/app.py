@@ -74,6 +74,7 @@ def check_id(id):
 
     status_code = response.status_code
     h1, title, meta = get_content(response.text)
-    db_actions.insert_into_urls_checks(get_conn, id, status_code, h1, title, meta)
+    url = [id, status_code, h1, title, meta]
+    db_actions.insert_into_urls_checks(get_conn, url)
     flash("Страница успешно проверена", "success")
     return redirect(url_for('add_url', id=id))

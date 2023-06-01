@@ -31,7 +31,7 @@ def check_url(f, id):
                 SELECT name, created_at FROM urls
                 WHERE id = %s""", [id])
             url_name, url_created_at = cur.fetchone()
-        with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor) as cur:
+        with conn.cursor(cursor_factory) as cur:
             cur.execute("""
                 SELECT id, status_code, h1, title, description, created_at
                 FROM url_checks
@@ -66,7 +66,8 @@ def get_name_url(f, id):
     return name
 
 
-def insert_into_urls_checks(f, id, status_code, h1, title, meta):
+def insert_into_urls_checks(f, url):
+    id, status_code, h1, title, meta = url
     with f() as conn:
         with conn.cursor() as cur:
             date = datetime.date.today()
